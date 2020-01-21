@@ -1,0 +1,153 @@
+#修改TNAME: K2P-5.0 中的K2P-5.0为你需要编译的型号，注意名称要与configs/templates/目录下的名字相同
+name: Build Padavan
+
+env:
+  TNAME: XY-C1
+#K2P-USB-5.0
+#XY-C1
+
+on:
+  #watch:
+  #  types: [started]
+  #release:
+  #  types: [published]
+  push:
+    branches: 
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-18.04
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@master
+    - name: Initialization environment
+      env:
+        DEBIAN_FRONTEND: noninteractive
+      run: |
+        #sudo apt-get update
+        sudo apt-get -y install unzip libtool-bin curl cmake gperf gawk flex bison nano xxd \
+        cpio git python-docutils gettext automake autopoint texinfo build-essential help2man \
+        pkg-config zlib1g-dev libgmp3-dev libmpc-dev libmpfr-dev libncurses5-dev libltdl-dev gcc-multilib
+    - name: Clone source code
+      run: |
+        git clone --depth=1 https://github.com/hanwckf/rt-n56u.git /opt/rt-n56u
+        cd /opt/rt-n56u/toolchain-mipsel
+        mkdir -p toolchain-3.4.x
+        wget https://github.com/hanwckf/padavan-toolchain/releases/download/v1.0/mipsel-linux-uclibc.tar.xz
+        tar -xvf mipsel-linux-uclibc.tar.xz -C toolchain-3.4.x
+        mkdir -p /opt/images/
+    - name: Build Firmware
+      #env:
+      #  TNAME: XY-C1
+      run: |
+        cd /opt/rt-n56u/trunk
+        if [ ! -f configs/templates/$TNAME.config ] ; then
+        echo "configs/templates/$TNAME.config not found "
+        exit 1
+        fi
+        cp -f configs/templates/$TNAME.config .config
+        ################################################################################################
+        #因不同型号配置功能不一样，所以先把配置项删除，如果你自己要添加其他的，也要写上删除这一条，切记！！！
+        ################################################################################################
+        #sed -i '/CONFIG_FIRMWARE_INCLUDE_MENTOHUST/d' .config #删除配置项MENTOHUST
+        #sed -i '/CONFIG_FIRMWARE_INCLUDE_SCUTCLIENT/d' .config #删除配置项SCUTCLIENT
+        #sed -i '/CONFIG_FIRMWARE_INCLUDE_SHADOWSOCKS/d' .config #删除配置项SS plus+
+        #sed -i '/CONFIG_FIRMWARE_INCLUDE_SSSERVER/d' .config #删除配置项SS server
+        #sed -i '/CONFIG_FIRMWARE_INCLUDE_DNSFORWARDER/d' .config #删除配置项DNSFORWARDER
+        #sed -i '/CONFIG_FIRMWARE_INCLUDE_ADBYBY/d' .config #删除配置项adbyby plus+
+        #sed -i '/CONFIG_FIRMWARE_INCLUDE_FRPC/d' .config #删除配置项adbyby plus+
+        #sed -i '/CONFIG_FIRMWARE_INCLUDE_FRPS/d' .config #删除配置项adbyby plus+
+        #sed -i '/CONFIG_FIRMWARE_INCLUDE_TUNSAFE/d' .config #删除配置项adbyby plus+
+        #sed -i '/CONFIG_FIRMWARE_INCLUDE_ALIDDNS/d' .config #删除配置项阿里DDNS
+        #sed -i '/CONFIG_FIRMWARE_INCLUDE_SMARTDNS/d' .config
+        ######################################################################
+        #以下选项是定义你需要的功能（y=集成,n=忽略），重新写入到.config文件
+        ######################################################################
+        #echo "CONFIG_FIRMWARE_INCLUDE_MENTOHUST=n" >> .config #MENTOHUST
+        #echo "CONFIG_FIRMWARE_INCLUDE_SCUTCLIENT=n" >> .config #SCUTCLIENT
+        #echo "CONFIG_FIRMWARE_INCLUDE_SHADOWSOCKS=y" >> .config #SS plus+
+        #echo "CONFIG_FIRMWARE_INCLUDE_SSSERVER=n" >> .config #SS server
+        #echo "CONFIG_FIRMWARE_INCLUDE_DNSFORWARDER=n" >> .config #DNSFORWARDER
+        #echo "CONFIG_FIRMWARE_INCLUDE_ADBYBY=y" >> .config #adbyby plus+
+        #echo "CONFIG_FIRMWARE_INCLUDE_FRPC=n" >> .config #内网穿透FRPC
+        #echo "CONFIG_FIRMWARE_INCLUDE_FRPS=n" >> .config #内网穿透FRPS
+        #echo "CONFIG_FIRMWARE_INCLUDE_TUNSAFE=n" >> .config #TUNSAFE
+        #echo "CONFIG_FIRMWARE_INCLUDE_ALIDDNS=y" >> .config #阿里DDNS
+        #echo "CONFIG_FIRMWARE_INCLUDE_SMARTDNS=y" >> .config #smartdns
+        #echo "CONFIG_FIRMWARE_INCLUDE_SMARTDNSBIN=y" >> .config #smartdns二进制文件
+        #echo "CONFIG_FIRMWARE_INCLUDE_V2RAY=n" >> .config #集成v2ray执行文件，如果不集成，会从网上下载下来执行，不影响正常使用
+        #echo "CONFIG_FIRMWARE_INCLUDE_TROJAN=n" >> .config #集成trojan执行文件，如果不集成，会从网上下载下来执行，不影响正常使用
+        #echo "CONFIG_FIRMWARE_INCLUDE_KOOLPROXY=y" >> .config #KP广告过滤
+        #echo "CONFIG_FIRMWARE_INCLUDE_CADDY=y" >> .config #在线文件管理服务
+        #echo "CONFIG_FIRMWARE_INCLUDE_CADDYBIN=n" >> .config #集成caddu执行文件，此文件有13M,请注意固件大小。如果不集成，会从网上下载下来执行，不影响正常使用
+        #########################################################################################
+        #自定义添加其它功能请参考源码configs/templates/目录下的config文件。按照上面的格式添加即可
+        #格式如下：
+        #sed -i '/自定义项/d' .config
+        #echo "自定义项=y" >> .config
+        #########################################################################################
+        ## by wo
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_NFSD/d' .config
+        echo "CONFIG_FIRMWARE_INCLUDE_NFSD=y" >> .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_NFSC/d' .config
+        echo "CONFIG_FIRMWARE_INCLUDE_NFSC=y" >> .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_CIFS/d' .config
+        echo "CONFIG_FIRMWARE_INCLUDE_CIFS=y" >> .config
+        
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_TCPDUMP/d' .config
+        echo "CONFIG_FIRMWARE_INCLUDE_TCPDUMP=y" >> .config
+        
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_DDNS_SSL/d' .config
+        echo "CONFIG_FIRMWARE_INCLUDE_DDNS_SSL=y" >> .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_HTTPS/d' .config
+        echo "CONFIG_FIRMWARE_INCLUDE_HTTPS=y" >> .config
+        
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_FRPC/d' .config
+        echo "CONFIG_FIRMWARE_INCLUDE_FRPC=y" >> .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_FRPS/d' .config
+        echo "CONFIG_FIRMWARE_INCLUDE_FRPS=y" >> .config
+        
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_OPENVPN/d' .config
+        echo "CONFIG_FIRMWARE_INCLUDE_OPENVPN=y" >> .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_OPENSSL_EXE/d' .config
+        echo "CONFIG_FIRMWARE_INCLUDE_OPENSSL_EXE=y" >> .config
+        
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_DUMP1090/d' .config
+        echo "CONFIG_FIRMWARE_INCLUDE_DUMP1090=n" >> .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_RTL_SDR/d' .config
+        echo "CONFIG_FIRMWARE_INCLUDE_RTL_SDR=n" >> .config
+        
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_SCUTCLIENT/d' .config
+        echo "CONFIG_FIRMWARE_INCLUDE_SCUTCLIENT=n" >> .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_GDUT_DRCOM/d' .config
+        echo "CONFIG_FIRMWARE_INCLUDE_GDUT_DRCOM=n" >> .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_DOGCOM/d' .config
+        echo "CONFIG_FIRMWARE_INCLUDE_DOGCOM=n" >> .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_MINIEAP/d' .config
+        echo "CONFIG_FIRMWARE_INCLUDE_MINIEAP=n" >> .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_NJIT_CLIENT/d' .config
+        echo "CONFIG_FIRMWARE_INCLUDE_NJIT_CLIENT=n" >> .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_MENTOHUST/d' .config
+        echo "CONFIG_FIRMWARE_INCLUDE_MENTOHUST=n" >> .config
+        
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_ARIA/d' .config
+        echo "CONFIG_FIRMWARE_INCLUDE_ARIA=n" >> .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_ARIA_WEB_CONTROL/d' .config
+        echo "CONFIG_FIRMWARE_INCLUDE_ARIA_WEB_CONTROL=n" >> .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_TRANSMISSION/d' .config
+        echo "CONFIG_FIRMWARE_INCLUDE_TRANSMISSION=n" >> .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_TRANSMISSION_WEB_CONTROL/d' .config
+        echo "CONFIG_FIRMWARE_INCLUDE_TRANSMISSION_WEB_CONTROL=n" >> .config
+        #########################################################################################
+        cd /opt/rt-n56u/trunk
+        sudo ./clear_tree
+        sudo ./build_firmware_modify $TNAME
+        sudo mv -f images/*.trx /opt/images/
+    - name : Upload packages
+      uses: actions/upload-artifact@master
+      if: always()
+      with:
+        name: Padavan-packages
+        path: /opt/images
