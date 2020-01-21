@@ -5,6 +5,11 @@ build padavan router firmwares with github actions
 
 # Thanks
 
+## padavan by hanwckf
+github: <https://github.com/hanwckf/rt-n56u>
+
+jianshu: <https://www.jianshu.com/p/6b8403cdea46>
+
 ## Padavan-build by chongshengB
 
 github: <https://github.com/chongshengB/Padavan-build>
